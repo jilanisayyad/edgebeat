@@ -43,9 +43,18 @@ release:
     _Released on {{ .Date }}_
 
     ### Highlights
-    - 
+    - Initial release
 
-    ### Install
+    ### Install (GitHub CLI)
+    ```bash
+    gh release download {{ .Tag }} --repo jilanisayyad/edgebeat \
+      --pattern "edgebeat_{{ .Version }}_$(uname | tr '[:upper:]' '[:lower:]')_*.tar.gz"
+    tar -xzf edgebeat_{{ .Version }}_*.tar.gz
+    sudo mv edgebeat /usr/local/bin/edgebeat
+    edgebeat --help
+    ```
+
+    ### Install (curl)
     ```bash
     VERSION={{ .Version }}
     OS=$(uname | tr '[:upper:]' '[:lower:]')
