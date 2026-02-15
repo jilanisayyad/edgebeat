@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,6 +20,9 @@ import (
 const defaultConfigPath = "configs/config.yaml"
 
 func main() {
+	configPath := flag.String("config", defaultConfigPath, "path to config file")
+	flag.Parse()
+
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
@@ -27,9 +31,16 @@ func main() {
 		_ = logger.Sync()
 	}()
 
-	cfg, err := config.Load(defaultConfigPath)
+	cfg, err := config.Load(*configPath)
 	if err != nil {
-		logger.Fatal("load config", zap.String("path", defaultConfigPath), zap.Error(err))
+		if errors.Is(err, os.ErrNotExist) {
+			logger.Warn("config not found, using defaults", zap.String("path", *configPath))
+			cfg = config.Default()
+		} else {
+			logger.Fatal("load config", zap.String("path", *configPath), zap.Error(err))
+		}
+	} else {
+		logger.Info("config loaded", zap.String("path", *configPath))
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
@@ -67,6 +78,26 @@ func main() {
 	h := handler.New(store, cfg.Integrations)
 	h.RegisterRoutes(mux, "")
 
+	endpoints := []string{
+		"/health",
+		"/metrics",
+		"/metrics/cpu",
+		"/metrics/memory",
+		"/metrics/disk",
+		"/metrics/network",
+		"/metrics/system",
+		"/metrics/sensors",
+		"/integrations",
+		"/data/fabricate",
+		"/ping",
+	}
+
+	logger.Info("starting edgebeat",
+		zap.String("address", cfg.Rest.Address),
+		zap.Int("frequency_seconds", cfg.FrequencySeconds),
+		zap.Strings("endpoints", endpoints),
+	)
+
 	server := &http.Server{
 		Addr:         cfg.Rest.Address,
 		Handler:      mux,
@@ -78,19 +109,7 @@ func main() {
 	go func() {
 		logger.Info("server started",
 			zap.String("address", cfg.Rest.Address),
-			zap.Strings("endpoints", []string{
-				"/health",
-				"/metrics",
-				"/metrics/cpu",
-				"/metrics/memory",
-				"/metrics/disk",
-				"/metrics/network",
-				"/metrics/system",
-				"/metrics/sensors",
-				"/integrations",
-				"/data/fabricate",
-				"/ping",
-			}),
+			zap.Strings("endpoints", endpoints),
 		)
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			logger.Fatal("server failed", zap.Error(err))

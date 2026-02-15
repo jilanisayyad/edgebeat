@@ -47,9 +47,12 @@ release:
 
     ### Install (GitHub CLI)
     ```bash
-    gh release download {{ .Tag }} --repo jilanisayyad/edgebeat \
-      --pattern "edgebeat_{{ .Version }}_$(uname | tr '[:upper:]' '[:lower:]')_*.tar.gz"
-    tar -xzf edgebeat_{{ .Version }}_*.tar.gz
+    VERSION={{ .Version }}
+    OS=$(uname | tr '[:upper:]' '[:lower:]')
+    ARCH=$(uname -m | sed 's/aarch64/arm64/' | sed 's/x86_64/amd64/')
+    ASSET="edgebeat_${VERSION}_${OS}_${ARCH}.tar.gz"
+    gh release download {{ .Tag }} --repo jilanisayyad/edgebeat --pattern "${ASSET}"
+    tar -xzf "${ASSET}"
     sudo mv edgebeat /usr/local/bin/edgebeat
     edgebeat --help
     ```

@@ -68,13 +68,8 @@ type OPCUAConfig struct {
 	Notes          string `yaml:"notes"`
 }
 
-func Load(path string) (Config, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return Config{}, fmt.Errorf("read config: %w", err)
-	}
-
-	cfg := Config{
+func Default() Config {
+	return Config{
 		FrequencySeconds: DefaultFrequencySeconds,
 		Rest: RestConfig{
 			Address: DefaultRestAddress,
@@ -100,6 +95,15 @@ func Load(path string) (Config, error) {
 			},
 		},
 	}
+}
+
+func Load(path string) (Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Config{}, fmt.Errorf("read config: %w", err)
+	}
+
+	cfg := Default()
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return Config{}, fmt.Errorf("parse config: %w", err)
