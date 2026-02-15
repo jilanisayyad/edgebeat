@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -eu
+
+MSG_FILE="$1"
+
+# Allow merge and revert commits to pass without checks.
+SUBJECT=$(head -n 1 "$MSG_FILE")
+case "$SUBJECT" in
+  Merge*|Revert*)
+    exit 0
+    ;;
+esac
+
+PATTERN='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([a-z0-9._-]+\))?: .{1,72}$'
+
+if ! printf "%s" "$SUBJECT" | grep -Eq "$PATTERN"; then
+  cat <<'EOF'
+Conventional commit required.
+
+Format:
+  type(scope): subject
+
+Examples:
+  feat(api): add sensors endpoint
+  fix(mqtt): handle reconnect errors
+
+Allowed types:
+  build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+
+Subject length: 1-72 characters.
+EOF
+  exit 1
+fi

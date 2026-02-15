@@ -1,0 +1,29 @@
+frequency_seconds: 5
+rest:
+  address: ":8080"
+  path: "/health"
+mqtt:
+  enabled: true
+  broker: "tcp://localhost:1883"
+  client_id: ""
+  topic: "edgebeat/health"
+  username: ""
+  password: ""
+  qos: 1
+
+integrations:
+  modbus:
+    enabled: false
+    mode: "tcp"
+    host: "localhost"
+    port: 502
+    unit_id: 1
+    notes: ""
+  opcua:
+    enabled: false
+    endpoint: "opc.tcp://localhost:4840"
+    security_policy: "None"
+    security_mode: "None"
+    username: ""
+    password: ""
+    notes: ""

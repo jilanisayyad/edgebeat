@@ -1,0 +1,55 @@
+version: "3"
+
+vars:
+  GO_BIN: go
+
+includes: {}
+
+silent: false
+
+tasks:
+  fmt:
+    desc: "Format Go code"
+    cmds:
+    - "{{.GO_BIN}} fmt ./..."
+
+  test:
+    desc: "Run unit tests"
+    cmds:
+    - "{{.GO_BIN}} test ./..."
+
+  test:all:
+    desc: "Run all test cases with cache disabled"
+    cmds:
+    - "{{.GO_BIN}} test -count=1 ./..."
+
+  build:
+    desc: "Build the edgebeat binary"
+    cmds:
+    - "{{.GO_BIN}} build -o edgebeat ./cmd/edgebeat"
+
+  run:
+    desc: "Run the edgebeat agent"
+    cmds:
+    - "{{.GO_BIN}} run ./cmd/edgebeat"
+
+  release:check:
+    desc: "Validate GoReleaser config"
+    cmds:
+    - "goreleaser check"
+
+  release:snapshot:
+    desc: "Build release artifacts locally without publishing"
+    cmds:
+    - "goreleaser release --snapshot --clean"
+
+  release:
+    desc: "Release all platforms with GoReleaser"
+    cmds:
+    - "goreleaser release --clean"
+
+  hooks:install:
+    desc: "Install git commit-msg hook for conventional commits"
+    cmds:
+    - "cp scripts/commit-msg .git/hooks/commit-msg"
+    - "chmod +x .git/hooks/commit-msg"
